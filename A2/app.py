@@ -19,11 +19,16 @@ except ImportError:  # pragma: no cover - 运行时回退为文本树
 DEFAULT_TEXT = "The boy saw the man with the telescope."
 
 
-def ensure_spacy_model(model_name: str) -> None:
-    """若 spaCy 语言模型未安装则自动下载。"""
-    if not spacy.util.is_package(model_name):
-        # 说明：使用 spaCy 内置下载器，避免手动安装
-        spacy.cli.download(model_name)
+def load_spacy_model(model_name: str):
+    """Load spaCy model with graceful fallback (no hard blocking download)."""
+    try:
+        return spacy.load(model_name), ""
+    except Exception:
+        try:
+            spacy.cli.download(model_name)
+            return spacy.load(model_name), ""
+        except Exception as exc:
+            return None, str(exc)
 
 
 def ensure_benepar_model(model_name: str) -> None:
@@ -84,15 +89,25 @@ def main() -> None:
 
     text = st.text_input("输入一句英文：", value=DEFAULT_TEXT)
 
-    # 说明：按需下载语言模型，避免首次运行报错
-    ensure_spacy_model("en_core_web_sm")
-    if benepar is not None:
-        ensure_benepar_model("benepar_en3")
+    nlp, spacy_err = load_spacy_model("en_core_web_sm")
+    if nlp is None:
+        st.error(
+            "spaCy 英文模型加载失败，当前无法解析句法。"
+            f"\n详细错误：{spacy_err}"
+        )
+        st.info("可稍后重试；若在本地运行，请执行：python -m spacy download en_core_web_sm")
+        return
 
-    # 说明：构建 spaCy + benepar 的流水线
-    nlp = spacy.load("en_core_web_sm")
-    if benepar is not None and "benepar" not in nlp.pipe_names:
-        nlp.add_pipe("benepar", config={"model": "benepar_en3"})
+    benepar_ready = False
+    benepar_err = ""
+    if benepar is not None:
+        try:
+            ensure_benepar_model("benepar_en3")
+            if "benepar" not in nlp.pipe_names:
+                nlp.add_pipe("benepar", config={"model": "benepar_en3"})
+            benepar_ready = True
+        except Exception as exc:
+            benepar_err = str(exc)
 
     dep_tab, const_tab = st.tabs(["依存关系", "成分结构"])
 
@@ -106,20 +121,25 @@ def main() -> None:
 
     with const_tab:
         st.subheader("成分句法 (Constituency Parsing)")
-        try:
-            tree = build_constituency_tree(nlp, text)
-            if svgling is not None and hasattr(tree, "_repr_svg_"):
-                # 说明：在 Streamlit 中直接显示 SVG
-                svg = tree._repr_svg_()
-                st.components.v1.html(svg, height=500, scrolling=True)
-            else:
-                # 说明：若没有 svgling，则展示多级文本树
-                st.code(tree)
-        except Exception as exc:
-            st.error(
-                "成分句法渲染失败：请确认已安装 benepar 与其模型。"
-                f"\n详细错误：{exc}"
-            )
+        if not benepar_ready:
+            st.warning("成分句法依赖 benepar 模型，当前不可用。可先使用依存句法与核心论元模块。")
+            if benepar_err:
+                st.caption(f"错误详情：{benepar_err}")
+        else:
+            try:
+                tree = build_constituency_tree(nlp, text)
+                if svgling is not None and hasattr(tree, "_repr_svg_"):
+                    # 说明：在 Streamlit 中直接显示 SVG
+                    svg = tree._repr_svg_()
+                    st.components.v1.html(svg, height=500, scrolling=True)
+                else:
+                    # 说明：若没有 svgling，则展示多级文本树
+                    st.code(tree)
+            except Exception as exc:
+                st.error(
+                    "成分句法渲染失败：请确认已安装 benepar 与其模型。"
+                    f"\n详细错误：{exc}"
+                )
 
     st.divider()
     st.subheader("核心论元提取器")

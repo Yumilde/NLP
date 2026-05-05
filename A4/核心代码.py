@@ -46,7 +46,14 @@ def ensure_nltk_data():
 @st.cache_resource
 def load_spacy_model():
     spacy_module = importlib.import_module("spacy")
-    return spacy_module.load("en_core_web_sm")
+    try:
+        return spacy_module.load("en_core_web_sm")
+    except Exception:
+        try:
+            spacy_module.cli.download("en_core_web_sm")
+            return spacy_module.load("en_core_web_sm")
+        except Exception:
+            return None
 
 
 def find_target_span(sentence: str, target_word: str) -> Optional[tuple[int, int]]:
@@ -185,8 +192,9 @@ def main():
         nlp = load_spacy_model()
     except Exception:
         srl_model_error = (
-            "SRL 模块需要安装/下载 spaCy 英文模型。"
-            "请先执行: `pip install spacy` 与 `python -m spacy download en_core_web_sm`"
+            "SRL 模块所需的 spaCy 英文模型暂不可用。"
+            "系统已尝试自动下载；若仍失败，请稍后重试或本地执行 "
+            "`python -m spacy download en_core_web_sm`。"
         )
 
     tab_wsd, tab_srl = st.tabs(["模块 1：词义消歧 (WSD)", "模块 2：语义角色标注 (SRL)"])
@@ -246,7 +254,7 @@ def main():
 
         if st.button("运行 SRL 分析", type="primary"):
             if nlp is None:
-                st.error("当前环境未就绪：请先安装 spaCy 并下载 en_core_web_sm 模型。")
+                st.error("当前环境未就绪：spaCy 英文模型未就绪，暂无法运行 SRL。")
             elif not srl_sentence.strip():
                 st.error("请输入待分析句子。")
             else:

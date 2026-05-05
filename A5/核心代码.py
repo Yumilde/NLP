@@ -24,6 +24,19 @@ SAMPLE_FILES = [
     "wsj_0604.out",
     "wsj_0615.out",
 ]
+FALLBACK_SAMPLE_TEXT = (
+    "The company released a new product, and customers responded positively. "
+    "Although the launch faced delays, the team solved most issues quickly. "
+    "Because demand increased, the firm expanded its support service."
+)
+FALLBACK_SAMPLE_EDUS = [
+    "The company released a new product,",
+    "and customers responded positively.",
+    "Although the launch faced delays,",
+    "the team solved most issues quickly.",
+    "Because demand increased,",
+    "the firm expanded its support service.",
+]
 
 PDTB_CONNECTIVES = {
     "when": "TEMPORAL",
@@ -73,8 +86,8 @@ def fetch_neuraleduseg_sample(sample_file: str) -> Tuple[str, str]:
     text_url = f"{NEURALEDUSEG_BASE}/{sample_file}"
     edu_url = f"{NEURALEDUSEG_BASE}/{sample_file}.edus"
 
-    text_resp = requests.get(text_url, timeout=20)
-    edu_resp = requests.get(edu_url, timeout=20)
+    text_resp = requests.get(text_url, timeout=10)
+    edu_resp = requests.get(edu_url, timeout=10)
     text_resp.raise_for_status()
     edu_resp.raise_for_status()
 
@@ -347,8 +360,9 @@ def tab_edu_segmentation() -> None:
     try:
         raw_text, edus_text = fetch_neuraleduseg_sample(sample_file)
     except Exception as exc:
-        st.error(f"无法获取远程数据：{exc}")
-        st.stop()
+        st.warning(f"无法获取远程数据，已切换到内置样例：{exc}")
+        raw_text = FALLBACK_SAMPLE_TEXT
+        edus_text = "\n".join(FALLBACK_SAMPLE_EDUS)
 
     gt_edus = parse_ground_truth_edus(edus_text, max_edus=max_edus)
 

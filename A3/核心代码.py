@@ -39,16 +39,29 @@ information retrieval ideas and the intuition behind semantic spaces.
 
 def ensure_nltk_punkt() -> None:
     """Ensure sentence tokenizer resources are available."""
+    need_download = False
     try:
         nltk.data.find("tokenizers/punkt")
     except LookupError:
+        need_download = True
+    try:
+        nltk.data.find("tokenizers/punkt_tab")
+    except LookupError:
+        need_download = True
+
+    if need_download:
         nltk.download("punkt", quiet=True)
+        nltk.download("punkt_tab", quiet=True)
 
 
 def split_sentences(text: str) -> List[str]:
     """Split raw text into sentence-level documents and filter noise."""
-    ensure_nltk_punkt()
-    raw_sentences = sent_tokenize(text)
+    try:
+        ensure_nltk_punkt()
+        raw_sentences = sent_tokenize(text)
+    except Exception:
+        # Fallback: when NLTK resources cannot be downloaded in cloud runtime.
+        raw_sentences = re.split(r"(?<=[.!?])\s+", text)
     cleaned = []
     for sentence in raw_sentences:
         s = sentence.strip()
