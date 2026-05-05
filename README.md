@@ -2,6 +2,9 @@
 
 《自然语言处理》课程 Vibe Coding 作业统一展示仓库。
 
+## 在线演示
+https://nlpvibecoding.streamlit.app/
+
 ## 在线展示结构
 - Home: 课程作业总览
 - A1-A9: 各次作业模块化页面
