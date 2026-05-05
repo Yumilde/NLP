@@ -16,12 +16,6 @@ pip install -r requirements.txt
 streamlit run Home.py
 ```
 
-## 部署到 Streamlit Community Cloud
-1. 推送本仓库到 GitHub
-2. 在 Streamlit Cloud 新建应用，选择该仓库
-3. Main file path 设为 `Home.py`
-4. Python version 选 `3.10`
-
 ## 目录说明
 - `Home.py`: 总入口
 - `pages/`: A1-A9 页面
