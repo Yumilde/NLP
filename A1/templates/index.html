@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>中文词法分析 Web 应用</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+/* ===== 全局 & 动态背景 ===== */
+body{
+  font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+  min-height:100vh;
+  background:linear-gradient(-45deg,#0f0c29,#302b63,#24243e,#0f0c29);
+  background-size:400% 400%;
+  animation:gradBG 15s ease infinite;
+  color:#e0e0e0;
+  overflow-x:hidden;
+}
+@keyframes gradBG{
+  0%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+  100%{background-position:0% 50%}
+}
+
+/* 浮动光球 */
+.orb{position:fixed;border-radius:50%;filter:blur(90px);z-index:0;pointer-events:none;opacity:.6}
+.orb-1{width:420px;height:420px;background:rgba(102,126,234,.22);top:-120px;left:-80px;animation:floatA 22s ease-in-out infinite}
+.orb-2{width:350px;height:350px;background:rgba(118,75,162,.2);bottom:-80px;right:-60px;animation:floatB 18s ease-in-out infinite}
+.orb-3{width:280px;height:280px;background:rgba(26,188,156,.15);top:40%;left:55%;animation:floatC 25s ease-in-out infinite}
+@keyframes floatA{0%,100%{transform:translate(0,0)}33%{transform:translate(60px,50px)}66%{transform:translate(-30px,70px)}}
+@keyframes floatB{0%,100%{transform:translate(0,0)}33%{transform:translate(-50px,-40px)}66%{transform:translate(40px,-60px)}}
+@keyframes floatC{0%,100%{transform:translate(0,0)}50%{transform:translate(-70px,40px)}}
+
+/* ===== Header ===== */
+.header{text-align:center;padding:48px 20px 10px;position:relative;z-index:1}
+.header h1{
+  font-size:38px;font-weight:700;
+  background:linear-gradient(135deg,#667eea,#a78bfa,#1abc9c,#667eea);
+  background-size:300% 300%;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  animation:gradText 5s ease infinite;
+}
+.header p{margin-top:10px;font-size:14px;color:rgba(255,255,255,.5);letter-spacing:1px}
+@keyframes gradText{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+
+.container{max-width:1200px;margin:0 auto;padding:20px 16px 80px;position:relative;z-index:1}
+
+/* ===== 毛玻璃卡片 ===== */
+.glass{
+  background:rgba(255,255,255,.06);
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:16px;padding:24px;
+  box-shadow:0 8px 32px rgba(0,0,0,.25);
+}
+
+/* ===== 入场动画 ===== */
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.fade-up{animation:fadeUp .5s ease both}
+
+/* ===== 输入区 ===== */
+.input-section{margin-bottom:24px}
+.input-section label{font-weight:600;font-size:15px;display:block;margin-bottom:10px;color:#ccc}
+.input-section textarea{
+  width:100%;height:120px;
+  background:rgba(255,255,255,.05);
+  border:1.5px solid rgba(255,255,255,.12);
+  border-radius:10px;padding:14px;font-size:15px;line-height:1.7;
+  color:#e0e0e0;resize:vertical;transition:border-color .2s;
+}
+.input-section textarea:focus{outline:none;border-color:#667eea}
+.input-section textarea::placeholder{color:rgba(255,255,255,.25)}
+
+.btn-row{margin-top:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.btn-analyze{
+  padding:11px 36px;font-size:15px;font-weight:600;color:#fff;
+  background:linear-gradient(135deg,#667eea,#764ba2);
+  border:none;border-radius:10px;cursor:pointer;transition:all .25s;
+  box-shadow:0 4px 18px rgba(102,126,234,.4);
+}
+.btn-analyze:hover{transform:translateY(-2px);box-shadow:0 6px 28px rgba(102,126,234,.55)}
+.btn-analyze:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-example{
+  padding:10px 22px;font-size:13px;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);
+  color:#bbb;border-radius:10px;cursor:pointer;transition:background .2s;
+}
+.btn-example:hover{background:rgba(255,255,255,.12)}
+.loading{display:none;color:rgba(255,255,255,.4);font-size:14px;margin-left:6px}
+.loading.active{display:inline}
+
+/* ===== Tab 导航 ===== */
+.tab-bar{
+  display:flex;gap:4px;margin-bottom:24px;
+  background:rgba(255,255,255,.04);border-radius:12px;padding:4px;
+}
+.tab-btn{
+  flex:1;padding:12px 0;background:transparent;border:none;
+  color:rgba(255,255,255,.4);font-size:15px;font-weight:600;
+  border-radius:10px;cursor:pointer;transition:all .3s;letter-spacing:.5px;
+}
+.tab-btn:hover{color:rgba(255,255,255,.65)}
+.tab-btn.active{background:rgba(255,255,255,.1);color:#fff;box-shadow:0 0 24px rgba(102,126,234,.25)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* ===== 规范化步骤 ===== */
+.norm-step{margin-bottom:16px}
+.norm-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.35);margin-bottom:5px;text-transform:uppercase;letter-spacing:1px}
+.norm-content{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
+  border-radius:8px;padding:12px 16px;font-size:14px;line-height:1.8;
+  word-break:break-all;max-height:120px;overflow-y:auto;color:#ccc;
+}
+.norm-step:nth-child(1){animation-delay:0s}
+.norm-step:nth-child(2){animation-delay:.08s}
+.norm-step:nth-child(3){animation-delay:.16s}
+.norm-step:nth-child(4){animation-delay:.24s}
+
+/* ===== 算法卡片网格 ===== */
+.algo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;margin-bottom:20px}
+.algo-card{padding:20px;transition:transform .2s,box-shadow .2s}
+.algo-card:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,.35)}
+.algo-name{
+  font-size:14px;font-weight:700;margin-bottom:12px;padding-bottom:9px;
+  border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:8px;
+}
+.algo-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.algo-stats{font-size:11px;color:rgba(255,255,255,.35);margin-bottom:10px;display:flex;gap:14px;flex-wrap:wrap}
+.algo-words{line-height:2.2;max-height:150px;overflow-y:auto}
+.word-chip{
+  display:inline-block;padding:3px 10px;margin:3px 3px;border-radius:6px;
+  font-size:13px;transition:all .2s;cursor:default;
+}
+.word-chip:hover{transform:translateY(-1px);filter:brightness(1.3)}
+.word-chip.diff{
+  border:1.5px dashed rgba(251,146,60,.6) !important;
+}
+
+/* ===== 统计表格 ===== */
+.stats-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:14px}
+.stats-table th,.stats-table td{padding:10px 12px;text-align:center;border-bottom:1px solid rgba(255,255,255,.06)}
+.stats-table th{color:rgba(255,255,255,.5);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+.stats-table td{color:#d0d0d0}
+.stats-table tbody tr:hover{background:rgba(255,255,255,.03)}
+.stats-table .row-label{text-align:left;color:rgba(255,255,255,.6);font-weight:600}
+
+/* ===== 图表行 ===== */
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+@media(max-width:768px){.charts-row{grid-template-columns:1fr}.algo-grid{grid-template-columns:1fr}}
+.chart-title{font-size:15px;font-weight:600;color:#ddd;margin-bottom:4px}
+
+/* ===== 下拉选择 ===== */
+.glass-select{
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
+  color:#ddd;padding:6px 14px;border-radius:8px;font-size:13px;cursor:pointer;
+}
+.glass-select option{background:#2a2a4a;color:#ddd}
+
+/* ===== 对比信息 ===== */
+.comp-section{margin-top:20px}
+.comp-section h4{font-size:14px;font-weight:600;color:#bbb;margin-bottom:12px}
+.similarity-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.sim-badge{
+  padding:5px 12px;border-radius:8px;font-size:12px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);
+  color:#aaa;
+}
+.sim-badge .val{font-weight:700;margin-left:2px}
+.sim-badge .high{color:#6ee7b7}
+.sim-badge .mid{color:#fcd34d}
+.sim-badge .low{color:#fca5a5}
+
+.unique-words-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:6px}
+.unique-label{font-size:12px;color:rgba(255,255,255,.4);min-width:140px}
+.unique-word{font-size:12px;padding:2px 8px;border-radius:4px;background:rgba(251,146,60,.15);color:#fdba74}
+
+/* ===== 词性标注 ===== */
+.pos-legend{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px;padding:12px 16px;background:rgba(255,255,255,.04);border-radius:8px}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:12px;color:#aaa}
+.legend-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+
+.pos-result{line-height:2.6;max-height:400px;overflow-y:auto}
+.pos-word{
+  display:inline-block;padding:3px 8px;margin:3px 3px;border-radius:6px;
+  font-size:14px;cursor:default;position:relative;border-bottom:2.5px solid;
+  transition:all .2s;background:rgba(255,255,255,.04);
+}
+.pos-word:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.3)}
+.pos-tooltip{
+  display:none;position:absolute;bottom:115%;left:50%;transform:translateX(-50%);
+  background:rgba(30,30,60,.95);color:#fff;font-size:11px;padding:4px 10px;
+  border-radius:6px;white-space:nowrap;z-index:10;border:1px solid rgba(255,255,255,.15);
+}
+.pos-word:hover .pos-tooltip{display:block}
+
+/* ===== 滚动条 ===== */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:4px}
+</style>
+</head>
+<body>
+
+<!-- 浮动光球 -->
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<div class="header">
+    <h1>多面手 · 中文词法分析</h1>
+    <p>文本规范化 &nbsp;|&nbsp; 多算法分词对比 &nbsp;|&nbsp; 词性标注</p>
+</div>
+
+<div class="container">
+    <!-- 输入区 -->
+    <div class="glass input-section fade-up">
+        <label for="text-input">输入中文文本</label>
+        <textarea id="text-input" placeholder="在此输入或粘贴一段中文文本，点击「开始分析」查看结果…"></textarea>
+        <div class="btn-row">
+            <button class="btn-analyze" id="btn-analyze" onclick="analyze()">开始分析</button>
+            <button class="btn-example" onclick="fillExample()">载入示例文本</button>
+            <span class="loading" id="loading">分析中…</span>
+        </div>
+    </div>
+
+    <!-- 结果 -->
+    <div id="results" style="display:none">
+        <!-- Tab 栏 -->
+        <div class="tab-bar fade-up">
+            <button class="tab-btn active" data-tab="normalize">文本规范化</button>
+            <button class="tab-btn" data-tab="segment">分词对比</button>
+            <button class="tab-btn" data-tab="pos">词性标注</button>
+        </div>
+
+        <!-- Tab 1: 规范化 -->
+        <div class="tab-content active" id="tab-normalize">
+            <div class="glass fade-up">
+                <div class="chart-title" style="margin-bottom:16px">文本规范化处理流程</div>
+                <div id="norm-output"></div>
+            </div>
+        </div>
+
+        <!-- Tab 2: 分词对比 -->
+        <div class="tab-content" id="tab-segment">
+            <div class="algo-grid" id="algo-grid"></div>
+
+            <div class="glass fade-up" style="margin-bottom:20px;overflow-x:auto">
+                <div class="chart-title">算法统计对比</div>
+                <table class="stats-table" id="stats-table"></table>
+            </div>
+
+            <div class="charts-row">
+                <div class="glass fade-up">
+                    <div class="chart-title">算法指标雷达图</div>
+                    <div id="radar-chart" style="width:100%;height:380px"></div>
+                </div>
+                <div class="glass fade-up">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                        <div class="chart-title">词频统计 (Top 10)</div>
+                        <select id="freq-algo-select" class="glass-select"></select>
+                    </div>
+                    <div id="freq-chart" style="width:100%;height:350px"></div>
+                </div>
+            </div>
+
+            <div class="glass fade-up comp-section" id="comparison-info"></div>
+        </div>
+
+        <!-- Tab 3: 词性标注 -->
+        <div class="tab-content" id="tab-pos">
+            <div class="glass fade-up">
+                <div class="chart-title" style="margin-bottom:14px">词性标注结果</div>
+                <div class="pos-legend" id="pos-legend"></div>
+                <div class="pos-result" id="pos-output"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ===== 常量 ===== */
+const EXAMPLE_TEXT = `自然語言處理（Natural Language Processing，簡稱ＮＬＰ）是計算機科學與人工智能的重要方向。它研究如何讓計算機理解、生成人類語言。隨著深度學習技術的發展，ＮＬＰ在機器翻譯、情感分析、文本摘要等領域取得了顯著進展！！！中文分词是中文自然语言处理的基础任务之一，词性标注则帮助我们理解每个词语在句子中扮演的语法角色。`;
+
+const ALGO_COLORS = {
+    fmm:           {bg:'rgba(59,130,246,.2)',   text:'#93c5fd', dot:'#3b82f6'},
+    bmm:           {bg:'rgba(16,185,129,.2)',    text:'#6ee7b7', dot:'#10b981'},
+    bimm:          {bg:'rgba(139,92,246,.2)',    text:'#c4b5fd', dot:'#8b5cf6'},
+    jieba_precise: {bg:'rgba(245,158,11,.2)',    text:'#fcd34d', dot:'#f59e0b'},
+    jieba_full:    {bg:'rgba(236,72,153,.2)',    text:'#f9a8d4', dot:'#ec4899'},
+    jieba_search:  {bg:'rgba(20,184,166,.2)',    text:'#5eead4', dot:'#14b8a6'},
+};
+
+let freqChart = null, radarChart = null, currentSegData = null;
+
+/* ===== Tab 切换 ===== */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+        setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
+    });
+});
+
+/* ===== 工具函数 ===== */
+function escapeHtml(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function fillExample(){document.getElementById('text-input').value=EXAMPLE_TEXT}
+
+/* ===== 分析请求 ===== */
+async function analyze(){
+    const text=document.getElementById('text-input').value.trim();
+    if(!text){alert('请输入文本');return}
+    const btn=document.getElementById('btn-analyze');
+    const ld=document.getElementById('loading');
+    btn.disabled=true; ld.classList.add('active');
+    try{
+        const r=await fetch('/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});
+        if(!r.ok)throw new Error('请求失败');
+        const data=await r.json();
+        renderResults(data);
+    }catch(e){alert('分析失败: '+e.message)}
+    finally{btn.disabled=false;ld.classList.remove('active')}
+}
+
+function renderResults(data){
+    document.getElementById('results').style.display='block';
+    currentSegData=data.segment;
+    renderNormalize(data.normalize);
+    renderAlgoCards(data.segment);
+    renderStatsTable(data.segment);
+    renderRadarChart(data.segment);
+    populateFreqSelect(data.segment);
+    renderFreqChart(Object.keys(data.segment)[3]); // default jieba precise
+    renderComparison(data.segment, data.comparison);
+    renderPOS(data.pos);
+    // 自动切到分词对比 tab
+    document.querySelector('[data-tab="segment"]').click();
+}
+
+/* ===== 规范化 ===== */
+function renderNormalize(norm){
+    const steps=[
+        {label:'原始文本',text:norm.original},
+        {label:'全角 → 半角',text:norm.half_width},
+        {label:'去除特殊符号',text:norm.clean},
+        {label:'繁体 → 简体',text:norm.simplified},
+    ];
+    document.getElementById('norm-output').innerHTML=steps.map((s,i)=>`
+        <div class="norm-step fade-up" style="animation-delay:${i*.08}s">
+            <div class="norm-label">${s.label}</div>
+            <div class="norm-content">${escapeHtml(s.text)}</div>
+        </div>
+    `).join('');
+}
+
+/* ===== 算法卡片 ===== */
+function renderAlgoCards(seg){
+    const algoIds=Object.keys(seg);
+    // 共识词：出现在 >= 半数算法中
+    const wordCount={};
+    algoIds.forEach(id=>{
+        new Set(seg[id].words).forEach(w=>{wordCount[w]=(wordCount[w]||0)+1});
+    });
+    const threshold=Math.ceil(algoIds.length/2);
+    const consensus=new Set(Object.entries(wordCount).filter(([,c])=>c>=threshold).map(([w])=>w));
+
+    const grid=document.getElementById('algo-grid');
+    grid.innerHTML=algoIds.map((id,i)=>{
+        const d=seg[id], c=ALGO_COLORS[id];
+        const chips=d.words.map(w=>{
+            const isDiff=!consensus.has(w)&&w.trim().length>0;
+            return `<span class="word-chip${isDiff?' diff':''}" style="background:${c.bg};color:${c.text}">${escapeHtml(w)}</span>`;
+        }).join('');
+        return `
+        <div class="glass algo-card fade-up" style="animation-delay:${i*.07}s">
+            <div class="algo-name"><span class="algo-dot" style="background:${c.dot}"></span>${d.name}</div>
+            <div class="algo-stats">
+                <span>词数 ${d.word_count}</span>
+                <span>唯一 ${d.unique_count}</span>
+                <span>均长 ${d.avg_length}</span>
+                <span>单字 ${d.single_char_count}</span>
+            </div>
+            <div class="algo-words">${chips}</div>
+        </div>`;
+    }).join('');
+}
+
+/* ===== 统计表 ===== */
+function renderStatsTable(seg){
+    const ids=Object.keys(seg);
+    const metrics=[
+        {key:'word_count',label:'切分词数'},
+        {key:'unique_count',label:'唯一词数'},
+        {key:'avg_length',label:'平均词长'},
+        {key:'single_char_count',label:'单字词数'},
+    ];
+    let html='<thead><tr><th></th>';
+    ids.forEach(id=>html+=`<th>${seg[id].name}</th>`);
+    html+='</tr></thead><tbody>';
+    metrics.forEach(m=>{
+        html+=`<tr><td class="row-label">${m.label}</td>`;
+        // 找最优值高亮
+        const vals=ids.map(id=>seg[id][m.key]);
+        const best=m.key==='avg_length'?Math.max(...vals):Math.min(...vals);
+        ids.forEach(id=>{
+            const v=seg[id][m.key];
+            const style=v===best?'color:#6ee7b7;font-weight:700':'';
+            html+=`<td style="${style}">${v}</td>`;
+        });
+        html+='</tr>';
+    });
+    html+='</tbody>';
+    document.getElementById('stats-table').innerHTML=html;
+}
+
+/* ===== 雷达图 ===== */
+function renderRadarChart(seg){
+    const ids=Object.keys(seg);
+    const metrics=['word_count','unique_count','avg_length','single_char_count'];
+    const names=['切分词数','唯一词数','平均词长','单字词数'];
+    const maxV=metrics.map(m=>Math.max(...ids.map(id=>seg[id][m]))*1.25||1);
+
+    if(!radarChart)radarChart=echarts.init(document.getElementById('radar-chart'));
+    radarChart.setOption({
+        tooltip:{trigger:'item'},
+        legend:{data:ids.map(id=>seg[id].name),textStyle:{color:'#999',fontSize:11},bottom:0,type:'scroll'},
+        radar:{
+            indicator:names.map((n,i)=>({name:n,max:maxV[i]})),
+            shape:'polygon',
+            axisName:{color:'#888',fontSize:11},
+            splitArea:{areaStyle:{color:['rgba(255,255,255,.01)','rgba(255,255,255,.03)']}},
+            splitLine:{lineStyle:{color:'rgba(255,255,255,.08)'}},
+            axisLine:{lineStyle:{color:'rgba(255,255,255,.08)'}},
+        },
+        series:[{
+            type:'radar',
+            data:ids.map(id=>({
+                name:seg[id].name,
+                value:metrics.map(m=>seg[id][m]),
+                lineStyle:{width:2},
+                areaStyle:{opacity:.08},
+                itemStyle:{color:ALGO_COLORS[id].dot},
+            })),
+        }],
+        backgroundColor:'transparent',
+    },true);
+    window.addEventListener('resize',()=>radarChart&&radarChart.resize());
+}
+
+/* ===== 词频图 ===== */
+function populateFreqSelect(seg){
+    const sel=document.getElementById('freq-algo-select');
+    sel.innerHTML=Object.keys(seg).map(id=>`<option value="${id}">${seg[id].name}</option>`).join('');
+    sel.value='jieba_precise';
+    sel.onchange=()=>renderFreqChart(sel.value);
+}
+
+function renderFreqChart(algoId){
+    const d=currentSegData[algoId];
+    if(!freqChart)freqChart=echarts.init(document.getElementById('freq-chart'));
+    const c=ALGO_COLORS[algoId];
+    freqChart.setOption({
+        tooltip:{trigger:'axis'},
+        xAxis:{type:'category',data:d.freq_labels,axisLabel:{color:'#999',interval:0,fontSize:11,rotate:d.freq_labels.length>7?25:0},axisLine:{lineStyle:{color:'rgba(255,255,255,.08)'}}},
+        yAxis:{type:'value',minInterval:1,axisLabel:{color:'#888'},splitLine:{lineStyle:{color:'rgba(255,255,255,.06)'}}},
+        series:[{
+            type:'bar',data:d.freq_values.map(v=>({
+                value:v,
+                itemStyle:{
+                    color:new echarts.graphic.LinearGradient(0,0,0,1,[
+                        {offset:0,color:c.dot},
+                        {offset:1,color:'rgba(30,30,60,.6)'},
+                    ]),
+                    borderRadius:[5,5,0,0],
+                },
+            })),
+            barMaxWidth:38,
+            label:{show:true,position:'top',color:'#bbb',fontSize:12},
+        }],
+        grid:{left:45,right:15,bottom:35,top:20},
+        backgroundColor:'transparent',
+    },true);
+    window.addEventListener('resize',()=>freqChart&&freqChart.resize());
+}
+
+/* ===== 对比信息 ===== */
+function renderComparison(seg, comp){
+    const el=document.getElementById('comparison-info');
+    // 相似度
+    let simHtml='<h4>算法两两 Jaccard 相似度</h4><div class="similarity-grid">';
+    for(const [pair,val] of Object.entries(comp.pairwise_jaccard)){
+        const [a,b]=pair.split('_vs_');
+        const cls=val>=80?'high':val>=50?'mid':'low';
+        const nameA=seg[a]?.name||a, nameB=seg[b]?.name||b;
+        const shortA=nameA.replace(/[（(].*/,'').trim(), shortB=nameB.replace(/[（(].*/,'').trim();
+        simHtml+=`<span class="sim-badge">${shortA} vs ${shortB} <span class="val ${cls}">${val}%</span></span>`;
+    }
+    simHtml+='</div>';
+
+    // 公共词
+    simHtml+=`<h4>所有算法公共词 (${comp.common_count} 个)</h4><div style="margin-bottom:16px;line-height:2">`;
+    comp.common_words.forEach(w=>{
+        simHtml+=`<span class="word-chip" style="background:rgba(102,126,234,.15);color:#a5b4fc">${escapeHtml(w)}</span>`;
+    });
+    simHtml+='</div>';
+
+    // 各算法独有词
+    simHtml+='<h4>各算法独有词</h4>';
+    for(const [id,words] of Object.entries(comp.unique_to)){
+        if(words.length===0)continue;
+        simHtml+=`<div class="unique-words-row"><span class="unique-label">${seg[id].name}:</span>`;
+        words.forEach(w=>{simHtml+=`<span class="unique-word">${escapeHtml(w)}</span>`});
+        simHtml+='</div>';
+    }
+
+    el.innerHTML=simHtml;
+}
+
+/* ===== 词性标注 ===== */
+function renderPOS(posList){
+    const legendMap={};
+    posList.forEach(p=>{if(!legendMap[p.pos_name])legendMap[p.pos_name]=p.color});
+    document.getElementById('pos-legend').innerHTML=Object.entries(legendMap).map(([name,color])=>
+        `<span class="legend-item"><span class="legend-dot" style="background:${color}"></span>${name}</span>`
+    ).join('');
+
+    document.getElementById('pos-output').innerHTML=posList.map(p=>`
+        <span class="pos-word" style="color:${p.color};border-bottom-color:${p.color}">
+            ${escapeHtml(p.word)}
+            <span class="pos-tooltip">${p.pos_name} (${p.pos})</span>
+        </span>
+    `).join('');
+}
+</script>
+</body>
+</html>

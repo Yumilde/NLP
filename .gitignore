@@ -1,0 +1,27 @@
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Virtual envs
+.venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Large local env accidentally included in assignment
+A7/.conda/
+
+# Streamlit cache
+.streamlit/
+
+# Logs
+*.log
