@@ -597,84 +597,99 @@ def render_module_4() -> None:
     min_count = st.slider("min_count", min_value=1, max_value=5, value=1, step=1, key="module4_min_count")
     train_btn = st.button("训练 FastText 并执行模块 4", type="primary", key="module4_run")
 
-    if not train_btn:
+    if train_btn:
+        try:
+            if not input_text or len(input_text.split()) < 30:
+                st.warning("文本过短。请至少输入约 30 个英文词。")
+                return
+
+            tokenized_sentences = tokenize_for_w2v(input_text)
+            if len(tokenized_sentences) < 2:
+                st.warning("有效句子不足，无法训练模型。")
+                return
+
+            w2v_model = train_word2vec_model(
+                tokenized_sentences=tokenized_sentences,
+                sg=1,
+                window=window,
+                vector_size=vector_size,
+                min_count=min_count,
+                epochs=epochs,
+            )
+            fasttext_model = train_fasttext_model(
+                tokenized_sentences=tokenized_sentences,
+                window=window,
+                vector_size=vector_size,
+                min_count=min_count,
+                epochs=epochs,
+            )
+
+            st.session_state["module4_w2v_model"] = w2v_model
+            st.session_state["module4_fasttext_model"] = fasttext_model
+            st.session_state["module4_trained"] = True
+        except Exception as exc:
+            st.error(f"模块 4 运行失败：{exc}")
+            st.exception(exc)
+            return
+
+    if not st.session_state.get("module4_trained"):
+        st.info("请先点击“训练 FastText 并执行模块 4”。")
         return
 
-    try:
-        if not input_text or len(input_text.split()) < 30:
-            st.warning("文本过短。请至少输入约 30 个英文词。")
-            return
+    w2v_model = st.session_state.get("module4_w2v_model")
+    fasttext_model = st.session_state.get("module4_fasttext_model")
+    if w2v_model is None or fasttext_model is None:
+        st.warning("模型状态丢失，请重新训练一次。")
+        st.session_state["module4_trained"] = False
+        return
 
-        tokenized_sentences = tokenize_for_w2v(input_text)
-        if len(tokenized_sentences) < 2:
-            st.warning("有效句子不足，无法训练模型。")
-            return
+    st.success(
+        f"训练完成：Word2Vec 词表 {len(w2v_model.wv.index_to_key)}，FastText 词表 {len(fasttext_model.wv.index_to_key)}。"
+    )
 
-        # Train Word2Vec for OOV comparison and FastText for subword modeling.
-        w2v_model = train_word2vec_model(
-            tokenized_sentences=tokenized_sentences,
-            sg=1,
-            window=window,
-            vector_size=vector_size,
-            min_count=min_count,
-            epochs=epochs,
-        )
-        fasttext_model = train_fasttext_model(
-            tokenized_sentences=tokenized_sentences,
-            window=window,
-            vector_size=vector_size,
-            min_count=min_count,
-            epochs=epochs,
-        )
+    st.markdown("### OOV 测试（Word2Vec vs FastText）")
+    oov_word = st.text_input("输入一个可能拼写错误的词", value="computeer", key="module4_oov").strip().lower()
+    oov_btn = st.button("执行 OOV 对比", key="module4_oov_btn")
 
-        st.success(
-            f"训练完成：Word2Vec 词表 {len(w2v_model.wv.index_to_key)}，FastText 词表 {len(fasttext_model.wv.index_to_key)}。"
-        )
+    if oov_btn:
+        if not oov_word:
+            st.warning("请输入待测试词。")
+        else:
+            try:
+                _ = w2v_model.wv[oov_word]
+                st.info("Word2Vec：该词在词表中，可提取向量。")
+            except KeyError:
+                st.warning("Word2Vec：未登录词")
 
-        st.markdown("### OOV 测试（Word2Vec vs FastText）")
-        oov_word = st.text_input("输入一个可能拼写错误的词", value="computeer", key="module4_oov").strip().lower()
-        oov_btn = st.button("执行 OOV 对比", key="module4_oov_btn")
+            ft_vec = fasttext_model.wv[oov_word]
+            ft_neighbors = fasttext_model.wv.similar_by_vector(ft_vec, topn=5)
+            ft_df = pd.DataFrame(ft_neighbors, columns=["word", "similarity"])
+            st.write("FastText：可通过子词信息构造向量，最相似词如下：")
+            st.dataframe(ft_df, use_container_width=True)
 
-        if oov_btn:
-            if not oov_word:
-                st.warning("请输入待测试词。")
-            else:
-                try:
-                    _ = w2v_model.wv[oov_word]
-                    st.info("Word2Vec：该词在词表中，可提取向量。")
-                except KeyError:
-                    st.warning("Word2Vec：未登录词")
+    st.markdown("### Sent2Vec（Average Pooling 简化实现）")
+    sent1 = st.text_area(
+        "句子 1",
+        value="Natural language processing helps computers understand human language in practical applications.",
+        key="module4_sent1",
+        height=100,
+    )
+    sent2 = st.text_area(
+        "句子 2",
+        value="Machines learn semantic patterns from text so they can analyze meaning more effectively.",
+        key="module4_sent2",
+        height=100,
+    )
+    sent_btn = st.button("计算句向量相似度", key="module4_sent_btn")
 
-                ft_vec = fasttext_model.wv[oov_word]
-                ft_neighbors = fasttext_model.wv.similar_by_vector(ft_vec, topn=5)
-                ft_df = pd.DataFrame(ft_neighbors, columns=["word", "similarity"])
-                st.write("FastText：可通过子词信息构造向量，最相似词如下：")
-                st.dataframe(ft_df, use_container_width=True)
-
-        st.markdown("### Sent2Vec（Average Pooling 简化实现）")
-        sent1 = st.text_area(
-            "句子 1",
-            value="Natural language processing helps computers understand human language in practical applications.",
-            key="module4_sent1",
-            height=100,
-        )
-        sent2 = st.text_area(
-            "句子 2",
-            value="Machines learn semantic patterns from text so they can analyze meaning more effectively.",
-            key="module4_sent2",
-            height=100,
-        )
-        sent_btn = st.button("计算句向量相似度", key="module4_sent_btn")
-
-        if sent_btn:
+    if sent_btn:
+        try:
             vec1 = sentence_to_avg_vector(sent1, fasttext_model)
             vec2 = sentence_to_avg_vector(sent2, fasttext_model)
             sim_score = cosine_similarity(vec1, vec2)
             st.write(f"句向量余弦相似度：{sim_score:.4f}")
-
-    except Exception as exc:
-        st.error(f"模块 4 运行失败：{exc}")
-        st.exception(exc)
+        except Exception as exc:
+            st.error(f"句向量计算失败：{exc}")
 
 
 def main() -> None:

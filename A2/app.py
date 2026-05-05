@@ -31,15 +31,16 @@ def load_spacy_model(model_name: str):
             return None, str(exc)
 
 
-def ensure_benepar_model(model_name: str) -> None:
-    """若 benepar 模型未安装则自动下载。"""
+def try_enable_benepar(nlp):
+    """Enable benepar automatically if runtime already has the model."""
     if benepar is None:
-        return
-    # 说明：benepar 在本地没有模型时会抛错，所以先检查并下载
+        return False, "未安装 benepar 依赖。"
     try:
-        benepar.download(model_name)
-    except Exception:  # pragma: no cover - 下载失败时由上层提示
-        pass
+        if "benepar" not in nlp.pipe_names:
+            nlp.add_pipe("benepar", config={"model": "benepar_en3"})
+        return True, ""
+    except Exception as exc:
+        return False, str(exc)
 
 
 def build_dependency_svg(nlp, text: str) -> str:
@@ -98,16 +99,8 @@ def main() -> None:
         st.info("可稍后重试；若在本地运行，请执行：python -m spacy download en_core_web_sm")
         return
 
-    benepar_ready = False
-    benepar_err = ""
-    if benepar is not None:
-        try:
-            ensure_benepar_model("benepar_en3")
-            if "benepar" not in nlp.pipe_names:
-                nlp.add_pipe("benepar", config={"model": "benepar_en3"})
-            benepar_ready = True
-        except Exception as exc:
-            benepar_err = str(exc)
+    # 自动尝试启用成分句法（与原作业一致），但不做在线下载，避免页面阻塞。
+    benepar_ready, benepar_err = try_enable_benepar(nlp)
 
     dep_tab, const_tab = st.tabs(["依存关系", "成分结构"])
 
@@ -122,7 +115,7 @@ def main() -> None:
     with const_tab:
         st.subheader("成分句法 (Constituency Parsing)")
         if not benepar_ready:
-            st.warning("成分句法依赖 benepar 模型，当前不可用。可先使用依存句法与核心论元模块。")
+            st.warning("成分句法模型未就绪（benepar_en3）。当前环境仅展示依存句法与核心论元。")
             if benepar_err:
                 st.caption(f"错误详情：{benepar_err}")
         else:
