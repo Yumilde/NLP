@@ -13,15 +13,19 @@ __pycache__/
 # Virtual envs
 .venv/
 env/
+.conda/
 
 # Jupyter
 .ipynb_checkpoints/
 
-# Large local env accidentally included in assignment
+# Assignment local environment accidentally included
 A7/.conda/
 
-# Streamlit cache
-.streamlit/
+# Streamlit and model cache
+.streamlit/secrets.toml
+.huggingface/
+.cache/
 
-# Logs
+# Logs and outputs
 *.log
+*.tmp
