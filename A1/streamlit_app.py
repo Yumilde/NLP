@@ -141,5 +141,15 @@ def main():
             html_str += f'<span style="color:{color}; margin-right:5px;">{word}({flag})</span>'
         st.markdown(html_str, unsafe_allow_html=True)
 
+        st.subheader("4. 词频统计")
+        # 过滤停用词和单字，统计词频
+        words_for_freq = [w for w in jieba.cut(norm["simplified"]) 
+                         if w not in STOP_WORDS and len(w) > 1]
+        freq_counts = Counter(words_for_freq).most_common(10)
+        if freq_counts:
+            st.table([{"词语": w, "频次": c} for w, c in freq_counts])
+        else:
+            st.write("未发现显著的高频词")
+
 if __name__ == "__main__":
     main()
