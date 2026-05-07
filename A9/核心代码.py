@@ -6,13 +6,6 @@ import plotly.graph_objects as go
 import streamlit as st
 from transformers import pipeline
 
-st.set_page_config(
-    page_title="电商评论情感分析与意见挖掘平台",
-    page_icon="📊",
-    layout="wide",
-)
-
-
 @st.cache_resource(show_spinner=True)
 def load_sentiment_pipeline():
     """Load lightweight multilingual sentiment model from Hugging Face."""
@@ -302,4 +295,9 @@ def main():
 
 
 if __name__ == "__main__":
+    st.set_page_config(
+        page_title="电商评论情感分析与意见挖掘平台",
+        page_icon="📊",
+        layout="wide",
+    )
     main()

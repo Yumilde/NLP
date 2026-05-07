@@ -564,7 +564,6 @@ def render_module_4() -> None:
 
 
 def main() -> None:
-    st.set_page_config(page_title="A6 语言模型训练与对比分析平台", layout="wide")
     st.title("A6：语言模型训练与对比分析平台")
 
     tabs = st.tabs([
@@ -588,4 +587,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    st.set_page_config(page_title="A6 语言模型训练与对比分析平台", layout="wide")
     main()

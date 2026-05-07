@@ -16,7 +16,9 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 
-st.set_page_config(page_title="语义分析综合测试平台", layout="wide")
+if __name__ == "__main__":
+    st.set_page_config(page_title="语义分析综合测试平台", layout="wide")
+    main()
 
 
 DEFAULT_TEXT = """
@@ -692,7 +694,7 @@ def render_module_4() -> None:
             st.error(f"句向量计算失败：{exc}")
 
 
-def main() -> None:
+def main():
     st.title("语义分析综合测试平台")
     st.caption("NLP Week 4 Vibe 实验：语义表示与对比分析系统")
 
@@ -717,6 +719,6 @@ def main() -> None:
     with tab4:
         render_module_4()
 
-
 if __name__ == "__main__":
+    st.set_page_config(page_title="语义分析综合测试平台", layout="wide")
     main()

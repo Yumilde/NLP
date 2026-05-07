@@ -13,9 +13,6 @@ except Exception:
     FCoref = None
 
 
-st.set_page_config(page_title="A5 篇章分析综合平台", layout="wide")
-
-
 NEURALEDUSEG_BASE = (
     "https://raw.githubusercontent.com/PKU-TANGENT/NeuralEDUSeg/master/data/rst/TRAINING"
 )
@@ -508,4 +505,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    st.set_page_config(page_title="A5 篇章分析综合平台", layout="wide")
     main()

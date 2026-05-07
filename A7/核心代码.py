@@ -292,8 +292,6 @@ def to_bio_sequence(text: str, entities: List[Entity]) -> List[Tuple[str, str]]:
 
 
 def main() -> None:
-    st.set_page_config(page_title="A7 模块1+2+3：NER、BIO、RE、KG", layout="wide")
-
     st.markdown(
         """
         <style>
@@ -402,4 +400,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    st.set_page_config(page_title="A7 模块1+2+3：NER、BIO、RE、KG", layout="wide")
     main()

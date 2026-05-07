@@ -85,7 +85,6 @@ def extract_core_arguments(nlp, text: str):
 
 
 def main() -> None:
-    st.set_page_config(page_title="句法透视仪", layout="wide")
     st.title("句法双引擎透视仪")
 
     text = st.text_input("输入一句英文：", value=DEFAULT_TEXT)
@@ -147,4 +146,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    st.set_page_config(page_title="句法透视仪", layout="wide")
     main()

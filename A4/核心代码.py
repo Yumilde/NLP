@@ -181,7 +181,6 @@ def extract_srl_heuristic(sentence: str, nlp):
 
 
 def main():
-    st.set_page_config(page_title="WSD & SRL 实验系统", layout="wide")
     st.title("Week 5 Vibe 实验：WSD 与 SRL")
 
     ensure_nltk_data()
@@ -271,4 +270,5 @@ def main():
 
 
 if __name__ == "__main__":
+    st.set_page_config(page_title="WSD & SRL 实验系统", layout="wide")
     main()
