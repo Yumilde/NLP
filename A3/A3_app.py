@@ -16,11 +16,6 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 
-if __name__ == "__main__":
-    st.set_page_config(page_title="语义分析综合测试平台", layout="wide")
-    main()
-
-
 DEFAULT_TEXT = """
 Natural language processing is a field of artificial intelligence that studies how computers
 and humans communicate through language. Researchers build representations of words, sentences,
@@ -721,4 +716,6 @@ def main():
 
 if __name__ == "__main__":
     st.set_page_config(page_title="语义分析综合测试平台", layout="wide")
+    main()
+else:
     main()
