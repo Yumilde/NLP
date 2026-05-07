@@ -30,6 +30,21 @@ def load_spacy_model(model_name: str):
 import nltk
 import os
 
+# Monkey-patch for T5Tokenizer compatibility with benepar
+def patch_t5_tokenizer():
+    try:
+        from transformers import T5Tokenizer
+        if not hasattr(T5Tokenizer, "build_inputs_with_special_tokens"):
+            def build_inputs_with_special_tokens(self, token_ids_0, token_ids_1=None):
+                if token_ids_1 is None:
+                    return token_ids_0 + [self.eos_token_id]
+                return token_ids_0 + token_ids_1 + [self.eos_token_id]
+            T5Tokenizer.build_inputs_with_special_tokens = build_inputs_with_special_tokens
+    except ImportError:
+        pass
+
+patch_t5_tokenizer()
+
 def try_enable_benepar(nlp):
     """Enable benepar automatically, downloading the model if necessary."""
     if benepar is None:
