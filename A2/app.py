@@ -27,16 +27,37 @@ def load_spacy_model(model_name: str):
         return None, str(e)
 
 
+import nltk
+import os
+
 def try_enable_benepar(nlp):
-    """Enable benepar automatically if runtime already has the model."""
+    """Enable benepar automatically, downloading the model if necessary."""
     if benepar is None:
         return False, "未安装 benepar 依赖。"
+    
+    model_name = "benepar_en3"
+    
+    # 尝试直接添加
     try:
         if "benepar" not in nlp.pipe_names:
-            nlp.add_pipe("benepar", config={"model": "benepar_en3"})
+            nlp.add_pipe("benepar", config={"model": model_name})
         return True, ""
-    except Exception as exc:
-        return False, str(exc)
+    except Exception:
+        # 如果失败，尝试下载模型
+        try:
+            with st.spinner(f"正在下载成分句法模型 {model_name}... 请稍候"):
+                # 设置 NLTK 数据路径到用户目录，避免权限问题
+                nltk_data_path = os.path.join(os.path.expanduser("~"), "nltk_data")
+                if nltk_data_path not in nltk.data.path:
+                    nltk.data.path.append(nltk_data_path)
+                
+                benepar.download(model_name)
+                
+            if "benepar" not in nlp.pipe_names:
+                nlp.add_pipe("benepar", config={"model": model_name})
+            return True, ""
+        except Exception as exc:
+            return False, f"模型下载或加载失败: {str(exc)}"
 
 
 def build_dependency_svg(nlp, text: str) -> str:
