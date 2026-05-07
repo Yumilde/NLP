@@ -23,12 +23,8 @@ def load_spacy_model(model_name: str):
     """Load spaCy model with graceful fallback (no hard blocking download)."""
     try:
         return spacy.load(model_name), ""
-    except Exception:
-        try:
-            spacy.cli.download(model_name)
-            return spacy.load(model_name), ""
-        except Exception as exc:
-            return None, str(exc)
+    except Exception as e:
+        return None, str(e)
 
 
 def try_enable_benepar(nlp):

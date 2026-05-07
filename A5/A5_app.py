@@ -64,9 +64,8 @@ def load_spacy_model():
     model_name = "en_core_web_sm"
     try:
         return spacy.load(model_name)
-    except OSError:
-        spacy_download(model_name)
-        return spacy.load(model_name)
+    except Exception:
+        return None
 
 
 @st.cache_resource

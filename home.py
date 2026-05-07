@@ -3,9 +3,7 @@ import streamlit as st
 st.title("NLP Vibe Coding Portfolio 🚀")
 st.markdown("""
 ### 课程：自然语言处理 (2025-2026-2)
-**学生：[您的名字]**
-
-欢迎来到我的 NLP Vibe Coding 作业展示平台！本项目整合了本学期 9 次核心实验，涵盖了从底层词法分析到高层篇章理解与应用的完整流程。
+**学生：朱雨墨**
 
 ---
 
@@ -24,11 +22,6 @@ st.markdown("""
     - 自动提取实体关系并构建知识图谱可视化。
     - 实现神经机器翻译 (NMT) 与 BLEU 质量评测。
     - 针对电商评论进行细粒度情感分析与意见挖掘。
-
----
-
-#### 💡 如何使用？
-请通过左侧导航栏切换不同的作业页面。每个页面均提供实时交互功能，您可以输入自己的文本进行测试。
 
 ---
 *Powered by Streamlit & Hugging Face Transformers*

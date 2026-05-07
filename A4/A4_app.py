@@ -49,11 +49,7 @@ def load_spacy_model():
     try:
         return spacy_module.load("en_core_web_sm")
     except Exception:
-        try:
-            spacy_module.cli.download("en_core_web_sm")
-            return spacy_module.load("en_core_web_sm")
-        except Exception:
-            return None
+        return None
 
 
 def find_target_span(sentence: str, target_word: str) -> Optional[tuple[int, int]]:
