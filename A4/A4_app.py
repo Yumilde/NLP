@@ -23,24 +23,28 @@ def load_bert_model():
 
 @st.cache_resource
 def ensure_nltk_data():
-    data_dir = Path.home() / "nltk_data"
-    corpora_dir = data_dir / "corpora"
-    data_dir.mkdir(parents=True, exist_ok=True)
-    corpora_dir.mkdir(parents=True, exist_ok=True)
+    # 强制在 Streamlit Cloud 上下载到具有写权限的目录
+    data_dir = os.path.join(os.path.expanduser("~"), "nltk_data")
+    if not os.path.exists(data_dir):
+        os.makedirs(data_dir, exist_ok=True)
+    
+    if data_dir not in nltk.data.path:
+        nltk.data.path.insert(0, data_dir)
 
-    if str(data_dir) not in nltk.data.path:
-        nltk.data.path.insert(0, str(data_dir))
+    for pkg in ["wordnet", "omw-1.4", "punkt", "punkt_tab"]:
+        try:
+            nltk.download(pkg, download_dir=data_dir, quiet=True)
+        except Exception:
+            pass
 
-    for pkg in ["wordnet", "omw-1.4"]:
-        nltk.download(pkg, download_dir=str(data_dir), quiet=True)
-        zip_path = corpora_dir / f"{pkg}.zip"
-        target_dir = corpora_dir / pkg
-        if zip_path.exists() and not target_dir.exists():
-            with zipfile.ZipFile(zip_path, "r") as zf:
-                zf.extractall(corpora_dir)
+    # 验证加载
+    try:
+        from nltk.corpus import wordnet
+        wordnet.ensure_loaded()
+    except Exception:
+        pass
 
-    nltk.data.find("corpora/wordnet")
-    nltk.data.find("corpora/omw-1.4")
+import os
 
 
 @st.cache_resource
