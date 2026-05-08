@@ -151,5 +151,4 @@ def main():
         else:
             st.write("未发现显著的高频词")
 
-if __name__ == "__main__":
-    main()
+main()

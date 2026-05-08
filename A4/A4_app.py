@@ -269,6 +269,4 @@ def main():
                 st.components.v1.html(dep_html, height=420, scrolling=True)
 
 
-if __name__ == "__main__":
-    st.set_page_config(page_title="WSD & SRL 实验系统", layout="wide")
-    main()
+main()

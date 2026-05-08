@@ -586,6 +586,4 @@ def main() -> None:
         render_module_4()
 
 
-if __name__ == "__main__":
-    st.set_page_config(page_title="A6 语言模型训练与对比分析平台", layout="wide")
-    main()
+main()

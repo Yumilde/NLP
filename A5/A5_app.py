@@ -507,6 +507,4 @@ def main() -> None:
         tab_coreference()
 
 
-if __name__ == "__main__":
-    st.set_page_config(page_title="A5 篇章分析综合平台", layout="wide")
-    main()
+main()

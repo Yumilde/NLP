@@ -1,18 +1,20 @@
 import io
-
+import re
 import spacy
 import streamlit as st
 from spacy import displacy
+import nltk
+import os
 
 # 说明：下面的依赖会在运行时按需下载模型
 try:
     import benepar
-except ImportError:  # pragma: no cover - 运行时提示安装
+except ImportError:
     benepar = None
 
 try:
     import svgling
-except ImportError:  # pragma: no cover - 运行时回退为文本树
+except ImportError:
     svgling = None
 
 
@@ -26,9 +28,6 @@ def load_spacy_model(model_name: str):
     except Exception as e:
         return None, str(e)
 
-
-import nltk
-import os
 
 # Monkey-patch for T5Tokenizer compatibility with benepar
 def patch_t5_tokenizer():
@@ -78,7 +77,6 @@ def try_enable_benepar(nlp):
 def build_dependency_svg(nlp, text: str) -> str:
     """生成依存句法的 SVG 字符串。"""
     doc = nlp(text)
-    # 说明：displacy.render 返回 SVG 字符串
     svg = displacy.render(doc, style="dep", jupyter=False, options={"distance": 80})
     return svg
 
@@ -86,51 +84,55 @@ def build_dependency_svg(nlp, text: str) -> str:
 def build_constituency_tree(nlp, text: str):
     """生成成分句法树；优先返回 svgling 图形，否则返回文本树。"""
     doc = nlp(text)
-    # 说明：benepar 会将 constituency 结果挂在扩展属性上
     sent = list(doc.sents)[0]
     tree = sent._.parse_string
     if svgling is not None:
-        # 说明：svgling 支持从 nltk.Tree 构建 SVG
         from nltk import Tree
-
         nltk_tree = Tree.fromstring(tree)
         return svgling.draw_tree(nltk_tree)
     return tree
 
 
 def extract_core_arguments(nlp, text: str):
-    """抽取依存关系中的核心论元（nsubj/dobj/pobj/ROOT）。"""
+    """从句子中提取核心三元组 (nsubj, ROOT, dobj/pobj)。"""
     doc = nlp(text)
-    core_labels = {"nsubj", "dobj", "pobj", "ROOT"}
     rows = []
     for token in doc:
-        if token.dep_ in core_labels:
+        if token.dep_ == "ROOT":
+            # 查找主语
+            subj = [w.text for w in token.lefts if w.dep_ in ("nsubj", "nsubjpass")]
+            # 查找宾语 (dobj) 或介宾 (pobj)
+            obj = [w.text for w in token.rights if w.dep_ in ("dobj", "attr")]
+            # 处理介宾结构
+            if not obj:
+                for child in token.rights:
+                    if child.dep_ == "prep":
+                        obj += [w.text for w in child.rights if w.dep_ == "pobj"]
+
             rows.append(
                 {
-                    "依存关系": token.dep_,
-                    "词": token.text,
-                    "词性": token.pos_,
-                    "支配词": token.head.text if token.head is not token else "-",
+                    "主体 (Subject)": ", ".join(subj) if subj else "[缺失]",
+                    "动作 (Verb)": token.text,
+                    "客体 (Object)": ", ".join(obj) if obj else "[缺失]",
                 }
             )
     return rows
 
 
 def main() -> None:
-    st.title("句法双引擎透视仪与'歧义侦探'")
+    st.title("句法双引擎透视仪")
+    st.caption("Week 2 随堂 Vibe 实验：依存句法 vs 成分句法")
 
-    text = st.text_input("输入一句英文：", value=DEFAULT_TEXT)
+    text = st.text_area("输入英文句子（仅限单句）", value=DEFAULT_TEXT, height=100)
 
-    nlp, spacy_err = load_spacy_model("en_core_web_sm")
+    # 载入基础模型
+    nlp, err = load_spacy_model("en_core_web_sm")
     if nlp is None:
-        st.error(
-            "spaCy 英文模型加载失败，当前无法解析句法。"
-            f"\n详细错误：{spacy_err}"
-        )
+        st.error(f"基础模型加载失败：{err}")
         st.info("可稍后重试；若在本地运行，请执行：python -m spacy download en_core_web_sm")
         return
 
-    # 自动尝试启用成分句法（与原作业一致），但不做在线下载，避免页面阻塞。
+    # 自动尝试启用成分句法
     benepar_ready, benepar_err = try_enable_benepar(nlp)
 
     dep_tab, const_tab = st.tabs(["依存关系", "成分结构"])
@@ -153,17 +155,12 @@ def main() -> None:
             try:
                 tree = build_constituency_tree(nlp, text)
                 if svgling is not None and hasattr(tree, "_repr_svg_"):
-                    # 说明：在 Streamlit 中直接显示 SVG
                     svg = tree._repr_svg_()
                     st.components.v1.html(svg, height=500, scrolling=True)
                 else:
-                    # 说明：若没有 svgling，则展示多级文本树
                     st.code(tree)
             except Exception as exc:
-                st.error(
-                    "成分句法渲染失败：请确认已安装 benepar 与其模型。"
-                    f"\n详细错误：{exc}"
-                )
+                st.error(f"成分句法渲染失败：{exc}")
 
     st.divider()
     st.subheader("核心论元提取器")
@@ -178,5 +175,6 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    st.set_page_config(page_title="句法透视仪", layout="wide")
+    main()
+else:
     main()

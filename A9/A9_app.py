@@ -297,10 +297,4 @@ def main():
             st.dataframe(records, use_container_width=True)
 
 
-if __name__ == "__main__":
-    st.set_page_config(
-        page_title="电商评论情感分析与意见挖掘平台",
-        page_icon="📊",
-        layout="wide",
-    )
-    main()
+main()

@@ -399,6 +399,4 @@ def main() -> None:
     st.caption("说明：当前实现为平铺实体标注与规则关系抽取，嵌套实体与复杂关系可在后续模块扩展。")
 
 
-if __name__ == "__main__":
-    st.set_page_config(page_title="A7 模块1+2+3：NER、BIO、RE、KG", layout="wide")
-    main()
+main()

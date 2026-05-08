@@ -16,11 +16,6 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 
-if __name__ == "__main__":
-    st.set_page_config(page_title="语义分析综合测试平台", layout="wide")
-    main()
-
-
 DEFAULT_TEXT = """
 Natural language processing is a field of artificial intelligence that studies how computers
 and humans communicate through language. Researchers build representations of words, sentences,
@@ -657,17 +652,24 @@ def render_module_4() -> None:
         if not oov_word:
             st.warning("请输入待测试词。")
         else:
+            # Word2Vec 测试
             try:
                 _ = w2v_model.wv[oov_word]
                 st.info("Word2Vec：该词在词表中，可提取向量。")
             except KeyError:
                 st.warning("Word2Vec：未登录词")
+            except Exception as e:
+                st.error(f"Word2Vec 测试出错: {e}")
 
-            ft_vec = fasttext_model.wv[oov_word]
-            ft_neighbors = fasttext_model.wv.similar_by_vector(ft_vec, topn=5)
-            ft_df = pd.DataFrame(ft_neighbors, columns=["word", "similarity"])
-            st.write("FastText：可通过子词信息构造向量，最相似词如下：")
-            st.dataframe(ft_df, use_container_width=True)
+            # FastText 测试
+            try:
+                ft_vec = fasttext_model.wv[oov_word]
+                ft_neighbors = fasttext_model.wv.similar_by_vector(ft_vec, topn=5)
+                ft_df = pd.DataFrame(ft_neighbors, columns=["word", "similarity"])
+                st.write("FastText：可通过子词信息构造向量，最相似词如下：")
+                st.dataframe(ft_df, use_container_width=True)
+            except Exception as e:
+                st.error(f"FastText OOV 测试出错: {e}")
 
     st.markdown("### Sent2Vec（Average Pooling 简化实现）")
     sent1 = st.text_area(
@@ -719,6 +721,4 @@ def main():
     with tab4:
         render_module_4()
 
-if __name__ == "__main__":
-    st.set_page_config(page_title="语义分析综合测试平台", layout="wide")
-    main()
+main()

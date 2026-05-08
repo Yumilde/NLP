@@ -151,6 +151,4 @@ def main():
                     st.metric("BLEU 得分", f"{bleu_score:.4f}")
                     st.write(f"结果解读：{bleu_interpretation(bleu_score)}")
 
-if __name__ == "__main__":
-    st.set_page_config(page_title="机器翻译对比与评测系统", page_icon="🌐", layout="wide")
-    main()
+main()
