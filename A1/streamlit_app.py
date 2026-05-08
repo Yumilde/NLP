@@ -126,15 +126,15 @@ def main():
     text = st.text_area("输入中文文本", "北京欢迎你！他来到了清华大学。")
     if st.button("开始分析", type="primary"):
         norm = normalize_text(text)
-        st.subheader("1. 文本规范化")
+        st.subheader("文本规范化")
         st.json(norm)
         
-        st.subheader("2. 分词算法对比")
+        st.subheader("分词算法对比")
         results = run_all_algorithms(norm["simplified"])
         for algo_id, data in results.items():
             st.write(f"**{data['name']}**: {' / '.join(data['words'])}")
             
-        st.subheader("3. 词性标注")
+        st.subheader("词性标注")
         words = pseg.cut(norm["simplified"])
         html_str = ""
         for word, flag in words:
@@ -142,7 +142,7 @@ def main():
             html_str += f'<span style="color:{color}; margin-right:5px;">{word}({flag})</span>'
         st.markdown(html_str, unsafe_allow_html=True)
 
-        st.subheader("4. 词频统计")
+        st.subheader("词频统计")
         # 过滤停用词和单字，统计词频
         words_for_freq = [w for w in jieba.cut(norm["simplified"]) 
                          if w not in STOP_WORDS and len(w) > 1]

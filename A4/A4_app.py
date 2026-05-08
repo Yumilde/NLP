@@ -218,7 +218,7 @@ def main():
             else:
                 target_word = target_word.strip()
 
-                st.markdown("### 1) 传统方法：NLTK Lesk")
+                st.markdown("### 传统方法：NLTK Lesk")
                 synset = run_lesk(sentence_1, target_word)
                 if synset is None:
                     st.warning("Lesk 未找到合适词义，请检查目标词是否在句子中或尝试更丰富上下文。")
@@ -226,7 +226,7 @@ def main():
                     st.write(f"- Predicted Synset: `{synset.name()}`")
                     st.write(f"- Definition: {synset.definition()}")
 
-                st.markdown("### 2) 上下文向量表示：BERT")
+                st.markdown("### 上下文向量表示：BERT")
                 emb_1 = get_target_embedding(sentence_1, target_word, tokenizer, model)
                 emb_2 = get_target_embedding(sentence_2, target_word, tokenizer, model)
 
@@ -260,11 +260,11 @@ def main():
             else:
                 doc, srl_result = extract_srl_heuristic(srl_sentence, nlp)
 
-                st.markdown("### 1) 结构化 SRL 输出")
+                st.markdown("### 结构化 SRL 输出")
                 df = pd.DataFrame([srl_result], columns=["A0 (Agent)", "Predicate", "A1 (Patient)", "AM-LOC", "AM-TMP"])
                 st.table(df)
 
-                st.markdown("### 2) 依存关系图（displaCy）")
+                st.markdown("### 依存关系图（displaCy）")
                 spacy_module = importlib.import_module("spacy")
                 dep_html = spacy_module.displacy.render(doc, style="dep", page=False)
                 st.components.v1.html(dep_html, height=420, scrolling=True)

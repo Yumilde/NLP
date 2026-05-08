@@ -209,7 +209,7 @@ def render_module_1() -> None:
     baseline_text = load_reuters_sample() if source == "NLTK Reuters 示例语料" else DEFAULT_TEXT
 
     corpus_text = st.text_area(
-        "2.1 训练语料文本",
+        "训练语料文本",
         value=baseline_text,
         height=220,
         help="可直接使用 Reuters 示例，也可以粘贴自己的英文语料。",
@@ -217,10 +217,10 @@ def render_module_1() -> None:
 
     n = st.selectbox("n-gram 阶数", options=[2, 3], index=1)
 
-    use_laplace = st.checkbox("2.4 开启加一平滑（Add-one / Laplace Smoothing）", value=False)
+    use_laplace = st.checkbox("开启加一平滑（Add-one / Laplace Smoothing）", value=False)
 
     sentence = st.text_input(
-        "2.3 输入待评估句子",
+        "输入待评估句子",
         value="language models help with unseen combinations",
     )
 
@@ -264,7 +264,7 @@ def render_module_1() -> None:
     col2.metric("词表大小 V", vocab_size)
     col3.metric("唯一上下文数", len(context_totals))
 
-    st.markdown("### 2.2 n-gram 统计示例")
+    st.markdown("### n-gram 统计示例")
     top_contexts = sorted(context_totals.items(), key=lambda x: x[1], reverse=True)[:10]
     st.dataframe(
         [
@@ -280,7 +280,7 @@ def render_module_1() -> None:
         use_container_width=True,
     )
 
-    st.markdown("### 2.3 句子联合概率")
+    st.markdown("### 句子联合概率")
     if use_laplace:
         st.success(f"当前模式：已开启平滑，P(sentence) = {format_prob(p_yes)}")
         st.dataframe(rows_yes, use_container_width=True)
@@ -288,7 +288,7 @@ def render_module_1() -> None:
         st.info(f"当前模式：未平滑，P(sentence) = {format_prob(p_no)}")
         st.dataframe(rows_no, use_container_width=True)
 
-    st.markdown("### 2.5 零概率事件与平滑前后对比")
+    st.markdown("### 零概率事件与平滑前后对比")
     if zero_events:
         st.warning("检测到未见过的 n-gram，未平滑联合概率为 0。")
         st.write(f"未平滑 P(sentence) = {format_prob(p_no)}")
@@ -316,16 +316,16 @@ def render_module_2() -> None:
     st.caption("使用 PyTorch 在小语料上训练字符级自回归模型，观察 Loss 收敛并进行续写。")
 
     corpus = st.text_area(
-        "2.1 输入短语料",
+        "输入短语料",
         value=DEFAULT_CHAR_CORPUS,
         height=180,
         help="建议输入一小段英文诗句、名言或短文。",
     )
 
     model_type = st.selectbox("模型类型", ["RNN", "LSTM"], index=0)
-    hidden_size = st.slider("2.2 Hidden Size", min_value=16, max_value=128, value=64, step=8)
-    epochs = st.slider("2.2 Epochs", min_value=10, max_value=200, value=60, step=10)
-    learning_rate = st.slider("2.2 Learning Rate", min_value=0.001, max_value=0.1, value=0.02, step=0.001)
+    hidden_size = st.slider("Hidden Size", min_value=16, max_value=128, value=64, step=8)
+    epochs = st.slider("pochs", min_value=10, max_value=200, value=60, step=10)
+    learning_rate = st.slider("Learning Rate", min_value=0.001, max_value=0.1, value=0.02, step=0.001)
 
     if "trained_model" not in st.session_state:
         st.session_state.trained_model = None
@@ -333,7 +333,7 @@ def render_module_2() -> None:
         st.session_state.itos = None
         st.session_state.training_meta = {}
 
-    start_train = st.button("2.3 开始训练", type="primary")
+    start_train = st.button("开始训练", type="primary")
 
     clean_corpus = corpus
     if len(clean_corpus) < 20:
@@ -389,7 +389,7 @@ def render_module_2() -> None:
 
         st.success(f"训练完成。最终 Loss: {losses[-1]:.4f}")
 
-    st.markdown("### 2.4 基于 Seed 的文本生成")
+    st.markdown("### 基于 Seed 的文本生成")
     seed = st.text_input("输入起始字符（Seed）", value="And ")
     gen_len = st.slider("生成长度", min_value=20, max_value=120, value=50, step=10)
 
@@ -420,7 +420,7 @@ def render_module_3() -> None:
     left, right = st.columns(2)
 
     with left:
-        st.markdown("### 2.1 BERT：Masked Language Modeling")
+        st.markdown("### BERT：Masked Language Modeling")
         mask_input = st.text_input(
             "输入包含 [MASK] 的句子",
             value="The man went to the [MASK] to buy some milk.",
@@ -452,7 +452,7 @@ def render_module_3() -> None:
                     st.error(f"BERT 推理失败：{exc}")
 
     with right:
-        st.markdown("### 2.2 GPT-2：Causal Language Modeling")
+        st.markdown("### GPT-2：Causal Language Modeling")
         prompt = st.text_area(
             "输入前缀 Prompt",
             value="In a small town, people believed that",
@@ -484,7 +484,7 @@ def render_module_3() -> None:
                 except Exception as exc:
                     st.error(f"GPT-2 推理失败：{exc}")
 
-    st.markdown("### 2.3 机制对比说明")
+    st.markdown("### 机制对比说明")
     st.info(
         "BERT 在 [MASK] 位置利用左右文共同预测缺失词；GPT-2 严格按照从左到右方式逐步生成后续 token。"
     )
@@ -500,7 +500,7 @@ def render_module_4() -> None:
         "milk quickly table sky of the because"
     )
     multi_text = st.text_area(
-        "2.1 输入测试句子（每行一句）",
+        "输入测试句子（每行一句）",
         value=default_input,
         height=180,
         help="可输入多行英文句子，系统将逐行计算 Loss 和 PPL。",
@@ -557,7 +557,7 @@ def render_module_4() -> None:
                         }
                     )
 
-            st.markdown("### 2.2-2.4 结果表")
+            st.markdown("### 结果表")
             st.dataframe(rows, use_container_width=True)
         except Exception as exc:
             st.error(f"PPL 计算失败：{exc}")

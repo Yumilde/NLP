@@ -112,7 +112,7 @@ def main():
     with tab3:
         st.subheader("模块 3：机器翻译质量自动评测 (BLEU Score)")
         bleu_source_en = st.text_area(
-            "1. 待翻译英文原文",
+            "待翻译英文原文",
             value="The weather today is very good.",
             height=100,
             key="tab3_source"
@@ -130,7 +130,7 @@ def main():
                     st.success("候选译文已生成并填入下方输入框。")
 
         reference_zh = st.text_area(
-            "2. 标准中文参考译文 (Reference)",
+            "标准中文参考译文 (Reference)",
             value="今天天气非常好。",
             height=100,
             key="tab3_reference"
