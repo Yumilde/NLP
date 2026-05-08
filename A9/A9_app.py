@@ -114,6 +114,7 @@ def main():
 
         input_text = st.text_area(
             "请输入评论文本",
+            value="这款耳机音质非常好，续航也很稳定，性价比很高。",
             placeholder="例如：这款耳机音质非常好，续航也很稳定，性价比很高。",
             height=140,
         )
@@ -162,12 +163,14 @@ def main():
 
         explicit_text = st.text_area(
             "显式情感评价",
+            value="这款相机成像效果太棒了，我非常满意。",
             placeholder="例如：这款相机成像效果太棒了，我非常满意。",
             height=120,
             key="explicit_input",
         )
         implicit_text = st.text_area(
             "隐式客观描述",
+            value="这台手机玩游戏半小时就没电了。",
             placeholder="例如：这台手机玩游戏半小时就没电了。",
             height=120,
             key="implicit_input",

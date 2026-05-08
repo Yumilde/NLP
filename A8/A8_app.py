@@ -68,7 +68,12 @@ def main():
 
     with tab1:
         st.subheader("模块 1：神经机器翻译引擎")
-        en_text = st.text_area("请输入英文句子", height=140, key="tab1_input")
+        en_text = st.text_area(
+            "请输入英文句子",
+            value="Natural language processing helps computers understand human language.",
+            height=140,
+            key="tab1_input"
+        )
         if st.button("开始翻译", type="primary", use_container_width=True, key="tab1_btn"):
             if not en_text.strip():
                 st.warning("请先输入英文句子。")
@@ -83,7 +88,12 @@ def main():
 
     with tab2:
         st.subheader("模块 2：基于规则的直译 vs 神经网络意译")
-        compare_text = st.text_area("请输入用于对比的英文句子", height=140, key="tab2_input")
+        compare_text = st.text_area(
+            "请输入用于对比的英文句子",
+            value="It rains cats and dogs.",
+            height=140,
+            key="tab2_input"
+        )
         if st.button("生成对比结果", type="primary", use_container_width=True, key="tab2_btn"):
             if not compare_text.strip():
                 st.warning("请先输入英文句子。")
@@ -101,7 +111,12 @@ def main():
 
     with tab3:
         st.subheader("模块 3：机器翻译质量自动评测 (BLEU Score)")
-        bleu_source_en = st.text_area("1. 待翻译英文原文", height=100, key="tab3_source")
+        bleu_source_en = st.text_area(
+            "1. 待翻译英文原文",
+            value="The weather today is very good.",
+            height=100,
+            key="tab3_source"
+        )
         if st.button("调用 NMT 生成候选译文", use_container_width=True, key="tab3_gen_btn"):
             if not bleu_source_en.strip():
                 st.warning("请先输入英文原文。")
@@ -114,7 +129,12 @@ def main():
                     st.session_state["tab3_candidate"] = candidate_text
                     st.success("候选译文已生成并填入下方输入框。")
 
-        reference_zh = st.text_area("2. 标准中文参考译文 (Reference)", height=100, key="tab3_reference")
+        reference_zh = st.text_area(
+            "2. 标准中文参考译文 (Reference)",
+            value="今天天气非常好。",
+            height=100,
+            key="tab3_reference"
+        )
         candidate_zh = st.text_area("3. 机器候选译文 (Candidate)", value=st.session_state.get("tab3_candidate", ""), height=100, key="tab3_candidate_area")
 
         if st.button("计算 BLEU 分数", type="primary", use_container_width=True, key="tab3_bleu_btn"):
