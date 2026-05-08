@@ -3,10 +3,12 @@ spacy>=3.7.4
 benepar>=0.2.0
 nltk>=3.8.1
 svgling>=0.4.0
-torch>=2.2.0
+torch==2.2.2
 transformers==4.39.3
 requests>=2.31.0
-fastcoref>=2.1.0
+fastcoref
+spacy-transformers
+datasets
 plotly>=5.22.0
 sentencepiece>=0.2.0
 protobuf>=4.25.0

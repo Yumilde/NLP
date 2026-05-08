@@ -9,8 +9,10 @@ from spacy.cli import download as spacy_download
 
 try:
     from fastcoref import FCoref
-except Exception:
+    import_error = None
+except Exception as e:
     FCoref = None
+    import_error = str(e)
 
 
 NEURALEDUSEG_BASE = (
@@ -450,7 +452,8 @@ def tab_coreference() -> None:
 
     predictor = load_fastcoref_model()
     if predictor is None:
-        st.error("未检测到 fastcoref。请先安装依赖后重试：pip install fastcoref")
+        st.error(f"未检测到 fastcoref 或加载失败。错误信息: {import_error}")
+        st.info("请尝试在本地环境执行：pip install fastcoref")
         return
 
     if not text.strip():
