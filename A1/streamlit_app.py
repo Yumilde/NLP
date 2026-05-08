@@ -122,6 +122,7 @@ POS_COLOR_MAP = {
 
 def main():
     st.title("打造'多面手'中文词法分析 Web 应用")
+    st.caption("Week 2 随堂 Vibe 实验")
     text = st.text_area("输入中文文本", "北京欢迎你！他来到了清华大学。")
     if st.button("开始分析", type="primary"):
         norm = normalize_text(text)

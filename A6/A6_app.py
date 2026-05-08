@@ -565,6 +565,7 @@ def render_module_4() -> None:
 
 def main() -> None:
     st.title("构建'语言模型训练与对比分析平台'")
+    st.caption("Week 7 随堂 Vibe 实验")
 
     tabs = st.tabs([
         "模块 1：n-gram & Smoothing",
