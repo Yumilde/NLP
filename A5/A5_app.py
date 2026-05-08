@@ -488,7 +488,8 @@ def tab_coreference() -> None:
 
 
 def main() -> None:
-    st.title("A5：篇章分析综合平台")
+    st.title("构建'篇章分析综合平台'")
+    st.caption("Week 6 随堂 Vibe 实验：篇章分析与指代消解系统")
     tab1, tab2, tab3 = st.tabs(
         [
             "模块 1：EDU 切分对比",

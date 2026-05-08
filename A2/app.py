@@ -120,8 +120,7 @@ def extract_core_arguments(nlp, text: str):
 
 
 def main() -> None:
-    st.title("句法双引擎透视仪")
-    st.caption("Week 2 随堂 Vibe 实验：依存句法 vs 成分句法")
+    st.title("句法双引擎透视仪与'歧义侦探'")
 
     text = st.text_area("输入英文句子（仅限单句）", value=DEFAULT_TEXT, height=100)
 

@@ -57,8 +57,8 @@ def bleu_interpretation(score: float) -> str:
     return "分数很高，候选译文与参考译文高度一致，自动评测表现优秀。"
 
 def main():
-    st.title("机器翻译对比与评测系统")
-    st.caption("Week 9 随堂 Vibe 实验：机器翻译机制与质量评测")
+    st.title("构建'机器翻译对比与评测Web系统'")
+    st.caption("Week 9 随堂 Vibe 实验：机器翻译机制与质量评测系统")
 
     tab1, tab2, tab3 = st.tabs([
         "神经机器翻译引擎 (NMT Engine)",

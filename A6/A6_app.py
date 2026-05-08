@@ -564,7 +564,7 @@ def render_module_4() -> None:
 
 
 def main() -> None:
-    st.title("A6：语言模型训练与对比分析平台")
+    st.title("构建'语言模型训练与对比分析平台'")
 
     tabs = st.tabs([
         "模块 1：n-gram & Smoothing",

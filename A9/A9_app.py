@@ -103,8 +103,8 @@ def main():
         unsafe_allow_html=True,
     )
 
-    st.title("电商评论情感分析与意见挖掘平台")
-    st.caption("Week 10 Vibe 实验：细粒度情感分析与舆情监测")
+    st.title("构建'情感分析与可视化仪表盘'")
+    st.caption("Week 10 随堂 Vibe 实验：电商评论情感分析与意见挖掘平台")
 
     tab1, tab2, tab3 = st.tabs(["模块1：基础情感分类", "模块2：显式 vs 隐式情感", "模块3：可视化聚合（待实现）"])
 

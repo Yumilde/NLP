@@ -181,7 +181,8 @@ def extract_srl_heuristic(sentence: str, nlp):
 
 
 def main():
-    st.title("Week 5 Vibe 实验：WSD 与 SRL")
+    st.title("构建'深层语义分析平台'")
+    st.caption("Week 5 随堂 Vibe 实验：词义消歧与语义角色标注系统")
 
     ensure_nltk_data()
     tokenizer, model = load_bert_model()

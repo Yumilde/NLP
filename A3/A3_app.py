@@ -697,8 +697,8 @@ def render_module_4() -> None:
 
 
 def main():
-    st.title("语义分析综合测试平台")
-    st.caption("NLP Week 4 Vibe 实验：语义表示与对比分析系统")
+    st.title("构建'语义分析综合测试平台'")
+    st.caption("Week 4 随堂 Vibe 实验：语义表示与对比分析系统")
 
     tab1, tab2, tab3, tab4 = st.tabs(
         [

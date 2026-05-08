@@ -324,7 +324,7 @@ def main() -> None:
         unsafe_allow_html=True,
     )
 
-    st.title("模块 1+2+3：命名实体识别、关系抽取与知识图谱")
+    st.title("Week 8 随堂 Vibe 实验：信息抽取与知识图谱构建系统")
     st.caption("支持中英文输入；当前使用 Mock/规则抽取，并使用 vis-network 渲染交互式知识图谱。")
 
     default_text = (
