@@ -181,7 +181,8 @@ def render_edu_cards(edus: List[str], card_border: str) -> None:
 def find_explicit_connectives(sentence: str) -> List[Tuple[int, int, str, str]]:
     matches: List[Tuple[int, int, str, str]] = []
     for conn, relation in PDTB_CONNECTIVES.items():
-        pattern = r"\\b" + re.escape(conn) + r"\\b"
+        # 修正：使用 r"\b" 表示正则表达式中的单词边界
+        pattern = r"\b" + re.escape(conn) + r"\b"
         for m in re.finditer(pattern, sentence, flags=re.IGNORECASE):
             matches.append((m.start(), m.end(), m.group(0), relation))
     matches.sort(key=lambda x: x[0])
