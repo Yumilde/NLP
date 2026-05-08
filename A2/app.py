@@ -117,7 +117,7 @@ def extract_core_arguments(nlp, text: str):
 
 
 def main() -> None:
-    st.title("句法双引擎透视仪")
+    st.title("句法双引擎透视仪与'歧义侦探'")
 
     text = st.text_input("输入一句英文：", value=DEFAULT_TEXT)
 
