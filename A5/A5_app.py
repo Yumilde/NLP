@@ -98,6 +98,12 @@ def parse_ground_truth_edus(edus_text: str, max_edus: int) -> List[str]:
 
 
 def baseline_segment_with_spacy(text: str, nlp, max_edus: int) -> List[str]:
+    if nlp is None:
+        # Cloud 环境模型未就绪时，退化到简单规则分句，避免页面崩溃。
+        chunks = re.split(r"(?<=[\.\!\?;])\s+|,\s+", text)
+        chunks = [c.strip() for c in chunks if c and c.strip()]
+        return chunks[:max_edus]
+
     doc = nlp(text)
     edus: List[str] = []
     current: List[str] = []
@@ -366,6 +372,8 @@ def tab_edu_segmentation() -> None:
     gt_edus = parse_ground_truth_edus(edus_text, max_edus=max_edus)
 
     nlp = load_spacy_model()
+    if nlp is None:
+        st.warning("spaCy 英文模型未就绪，模块 1 已切换为简化规则切分模式。")
     baseline_edus = baseline_segment_with_spacy(raw_text, nlp=nlp, max_edus=max_edus)
 
     st.markdown("### 原始文本片段")
